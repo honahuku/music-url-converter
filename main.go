@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 
 	"github.com/zmb3/spotify/v2"
@@ -42,9 +43,13 @@ func getSpotifyClient(ctx context.Context) *spotify.Client {
 func getTrackURL(client *spotify.Client, artistName string, trackName string) (string, error) {
 	ctx := context.Background()
 
-	// アーティスト名と曲名を使って検索を行います。
-	searchResults, err := client.Search(ctx, fmt.Sprintf("artist:%s track:%s", artistName, trackName), spotify.SearchTypeTrack)
+	// URLエンコードされた検索クエリを作成します。
+	query := url.QueryEscape(fmt.Sprintf("artist:%s track:%s", artistName, trackName))
+
+	// エンコードされたクエリを使って検索を行います。
+	searchResults, err := client.Search(ctx, query, spotify.SearchTypeTrack)
 	if err != nil {
+		fmt.Printf("Search error: %v\n", err)
 		return "", err
 	}
 
