@@ -47,9 +47,9 @@ func getToken(clientID, clientSecret string) (string, error) {
 
 // searchSpotify searches the Spotify database for tracks matching the given query.
 // It returns the raw JSON response and any error encountered.
-func searchSpotify(query, token string) (string, error) {
+func searchSpotify(query, token string, searchType string) (string, error) {
 	encodedQuery := url.QueryEscape(query)
-	requestURL := fmt.Sprintf("https://api.spotify.com/v1/search?q=%s&type=track", encodedQuery)
+	requestURL := fmt.Sprintf("https://api.spotify.com/v1/search?q=%s&type=%s", encodedQuery, searchType)
 
 	req, err := http.NewRequest("GET", requestURL, nil)
 	if err != nil {
@@ -111,7 +111,8 @@ func main() {
 	}
 
 	query := "藤井風 きらり"
-	result, err := searchSpotify(query, token)
+	searchType := "track" // TODO: #1 track以外の検索もできるようにする
+	result, err := searchSpotify(query, token, searchType)
 	if err != nil {
 		log.Fatalf("Error searching Spotify: %v", err)
 	}
