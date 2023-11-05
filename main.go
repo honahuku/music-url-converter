@@ -11,9 +11,9 @@ import (
 	"os"
 )
 
-// getToken retrieves an access token from the Spotify API using the provided
+// getSpotifyToken retrieves an access token from the Spotify API using the provided
 // client ID and client secret. It returns the token and any error encountered.
-func getToken(clientID, clientSecret string) (string, error) {
+func getSpotifyToken(clientID, clientSecret string) (string, error) {
 	data := url.Values{}
 	data.Set("grant_type", "client_credentials")
 
@@ -97,31 +97,34 @@ func extractTrackURL(jsonData string) (string, error) {
 	return "", fmt.Errorf("no tracks found")
 }
 
-func main() {
+func performSpotifySearch(query, searchType string) (string, error) {
 	clientID := os.Getenv("SPOTIFY_CLIENT_ID")
 	clientSecret := os.Getenv("SPOTIFY_CLIENT_SECRET")
 
 	if clientID == "" || clientSecret == "" {
-		log.Fatal("SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET must be set")
+		return "", fmt.Errorf("SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET must be set")
 	}
 
-	token, err := getToken(clientID, clientSecret)
+	token, err := getSpotifyToken(clientID, clientSecret)
 	if err != nil {
-		log.Fatalf("Error getting token: %v", err)
+		return "", fmt.Errorf("Error getting Spotify token: %v", err)
 	}
 
-	query := "藤井風 きらり"
-	searchType := "track" // TODO: #1 track以外の検索もできるようにする
 	result, err := searchSpotify(query, token, searchType)
+	if err != nil {
+		return "", fmt.Errorf("Error searching Spotify: %v", err)
+	}
+
+	return extractTrackURL(result)
+}
+
+func main() {
+	query := "藤井風 何なんw"
+	searchType := "track" // TODO: #1 track以外の検索もできるようにする
+
+	trackURL, err := performSpotifySearch(query, searchType)
 	if err != nil {
 		log.Fatalf("Error searching Spotify: %v", err)
 	}
-
-	// 結果からトラックのURLを抽出します。
-	trackURL, err := extractTrackURL(result)
-	if err != nil {
-		log.Fatalf("Error extracting track URL: %v", err)
-	}
-
 	fmt.Println("Track URL:", trackURL)
 }
