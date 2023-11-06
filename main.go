@@ -129,6 +129,7 @@ type TrackInfo struct {
 // getYoutubeMusicInfo gets track information from YouTube Music.
 func getYoutubeMusicInfo(url string) (TrackInfo, error) {
 	// Node.jsスクリプトのパス
+	// TODO: #3 Youtube Music以外にも対応する
 	script := "./downloadPage/main.js"
 
 	// Node.jsのスクリプトを実行するコマンドを準備
