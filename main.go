@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -128,33 +129,59 @@ type TrackInfo struct {
 
 // getYoutubeMusicInfo gets track information from YouTube Music.
 func getYoutubeMusicInfo(url string) (TrackInfo, error) {
-	// Node.jsスクリプトのパス
 	// TODO: #3 Youtube Music以外にも対応する
-	script := "./downloadPage/main.js"
+	// Node.jsのスクリプトを実行
+	dir := "./downloadPage"
 
-	// Node.jsのスクリプトを実行するコマンドを準備
-	cmd := exec.Command("node", script, url)
-
-	// スクリプトの標準出力と標準エラー出力を捕捉するためのバッファ
-	var out bytes.Buffer
+	buildCmd := exec.Command("npm", "run", "build")
+	buildCmd.Dir = dir
+	var stdout bytes.Buffer
 	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
+	buildCmd.Stdout = &stdout
+	buildCmd.Stderr = &stderr
+	err := buildCmd.Run()
+	if err != nil {
+		// コマンド実行に失敗した場合の処理
+		fmt.Printf("Error running npm run build: %v\n", err)
+		if stderr.String() != "" {
+			fmt.Printf("Stderr: %s\n", stderr.String())
+		}
+	} else {
+		// コマンド実行に成功した場合の処理
+		if stdout.String() != "" {
+			fmt.Printf("npm run build success. Stdout: %s", stdout.String())
+		} else {
+			fmt.Printf("npm run build success but no output.")
+		}
+	}
 
-	// スクリプトを実行
-	err := cmd.Run()
+	cmd := exec.Command("npm", "start", "--", url)
+	cmd.Dir = dir
+	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
 		return TrackInfo{}, err
 	}
 
-	// スクリプトの出力を取得
-	output := out.String()
+	if err := cmd.Start(); err != nil {
+		return TrackInfo{}, err
+	}
 
-	// 出力をTrackInfo構造体にデコード
+	scanner := bufio.NewScanner(stdoutPipe)
 	var info TrackInfo
-	err = json.Unmarshal([]byte(output), &info)
-	if err != nil {
-		fmt.Println("Error decoding JSON:", err)
+	for scanner.Scan() {
+		line := scanner.Text()
+		fmt.Println(line) // リアルタイム出力
+		// JSON形式の行を検出した場合にデコード
+		if json.Valid([]byte(line)) {
+			if err := json.Unmarshal([]byte(line), &info); err != nil {
+				log.Println("Error decoding JSON:", err)
+				continue
+			}
+			break // JSONをデコードしたらループを抜ける
+		}
+	}
+
+	if err := cmd.Wait(); err != nil {
 		return TrackInfo{}, err
 	}
 
