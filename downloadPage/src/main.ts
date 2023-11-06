@@ -21,13 +21,13 @@ const puppeteer = require('puppeteer');
   const trackNameXPath = '/html/body/ytmusic-app/ytmusic-app-layout/ytmusic-player-bar/div[2]/div[2]/yt-formatted-string';
   await page.waitForXPath(trackNameXPath, { visible: true });
   const [trackElement] = await page.$x(trackNameXPath);
-  const trackName = await page.evaluate(el => el.getAttribute('title'), trackElement);
+  const trackName = await page.evaluate((el: Element) => el.getAttribute('title'), trackElement);
 
   // アーティスト名を取得
   const artistNameXPath = '/html/body/ytmusic-app/ytmusic-app-layout/ytmusic-player-bar/div[2]/div[2]/span/span[2]/yt-formatted-string/a[1]';
   await page.waitForXPath(artistNameXPath, { visible: true });
   const [artistElement] = await page.$x(artistNameXPath);
-  const artistName = await page.evaluate(el => el.textContent, artistElement);
+  const artistName = await page.evaluate((el: Element) => el.textContent, artistElement);
 
   // トラック名とアーティスト名を標準出力に出力
   console.log(JSON.stringify({ trackName, artistName }));
