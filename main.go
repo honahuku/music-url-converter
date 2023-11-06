@@ -144,6 +144,8 @@ func getYoutubeMusicInfo(url string) (TrackInfo, error) {
 	// スクリプトを実行
 	err := cmd.Run()
 	if err != nil {
+		// エラー出力を含めてエラーをログに記録
+		log.Printf("Error running script: %v, Stderr: %s\n", err, stderr.String())
 		return TrackInfo{}, err
 	}
 
