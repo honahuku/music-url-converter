@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 // getSpotifyToken retrieves an access token from the Spotify API using the provided
@@ -133,28 +135,35 @@ func getYoutubeMusicInfo(url string) (TrackInfo, error) {
 	cmd := exec.Command("npm", "start", "--", url)
 	cmd.Dir = "./downloadPage" // 実行ディレクトリを設定
 
-	// スクリプトの標準出力と標準エラー出力を捕捉するためのバッファ
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-
-	// スクリプトを実行
-	err := cmd.Run()
+	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		// エラー出力を含めてエラーをログに記録
-		log.Printf("Error running script: %v, Stderr: %s\n", err, stderr.String())
 		return TrackInfo{}, err
 	}
 
-	// スクリプトの出力を取得
-	output := out.String()
+	if err := cmd.Start(); err != nil {
+		return TrackInfo{}, err
+	}
 
-	// 出力をTrackInfo構造体にデコード
+	scanner := bufio.NewScanner(stdoutPipe)
 	var info TrackInfo
-	err = json.Unmarshal([]byte(output), &info)
-	if err != nil {
-		fmt.Println("Error decoding JSON:", err)
+	for scanner.Scan() {
+		line := scanner.Text()
+		// npmログのプレフィックスを検出して出力
+		if strings.Contains(line, ">") {
+			fmt.Printf("[npm]%s\n", line)
+			continue
+		}
+		// JSON形式の行を検出した場合にデコード
+		if json.Valid([]byte(line)) {
+			if err := json.Unmarshal([]byte(line), &info); err != nil {
+				log.Println("Error decoding JSON:", err)
+				continue
+			}
+			break // JSONをデコードしたらループを抜ける
+		}
+	}
+
+	if err := cmd.Wait(); err != nil {
 		return TrackInfo{}, err
 	}
 
