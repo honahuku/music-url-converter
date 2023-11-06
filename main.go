@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 // getSpotifyToken retrieves an access token from the Spotify API using the provided
@@ -150,9 +149,9 @@ func getYoutubeMusicInfo(url string) (TrackInfo, error) {
 	} else {
 		// コマンド実行に成功した場合の処理
 		if stdout.String() != "" {
-			fmt.Printf("npm run build success. Stdout: %s\n", stdout.String())
+			fmt.Printf("npm run build success. Stdout: %s", stdout.String())
 		} else {
-			fmt.Printf("npm run build success but no output.\n")
+			fmt.Printf("npm run build success but no output.")
 		}
 	}
 
@@ -171,11 +170,7 @@ func getYoutubeMusicInfo(url string) (TrackInfo, error) {
 	var info TrackInfo
 	for scanner.Scan() {
 		line := scanner.Text()
-		// npmログのプレフィックスを検出して出力
-		if strings.Contains(line, ">") {
-			fmt.Printf("[npm]%s\n", line)
-			continue
-		}
+		fmt.Println(line) // リアルタイム出力
 		// JSON形式の行を検出した場合にデコード
 		if json.Valid([]byte(line)) {
 			if err := json.Unmarshal([]byte(line), &info); err != nil {
