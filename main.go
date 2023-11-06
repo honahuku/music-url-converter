@@ -132,9 +132,32 @@ type TrackInfo struct {
 func getYoutubeMusicInfo(url string) (TrackInfo, error) {
 	// TODO: #3 Youtube Music以外にも対応する
 	// Node.jsのスクリプトを実行
-	cmd := exec.Command("npm", "start", "--", url)
-	cmd.Dir = "./downloadPage" // 実行ディレクトリを設定
+	dir := "./downloadPage"
 
+	buildCmd := exec.Command("npm", "run", "build")
+	buildCmd.Dir = dir
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	buildCmd.Stdout = &stdout
+	buildCmd.Stderr = &stderr
+	err := buildCmd.Run()
+	if err != nil {
+		// コマンド実行に失敗した場合の処理
+		fmt.Printf("Error running npm run build: %v\n", err)
+		if stderr.String() != "" {
+			fmt.Printf("Stderr: %s\n", stderr.String())
+		}
+	} else {
+		// コマンド実行に成功した場合の処理
+		if stdout.String() != "" {
+			fmt.Printf("npm run build success. Stdout: %s\n", stdout.String())
+		} else {
+			fmt.Printf("npm run build success but no output.\n")
+		}
+	}
+
+	cmd := exec.Command("npm", "start", "--", url)
+	cmd.Dir = dir
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
 		return TrackInfo{}, err
