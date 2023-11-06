@@ -1,5 +1,7 @@
 {
     "recommendations": [
-        "golang.go"
+        "github.copilot",
+        "golang.go",
+        "github.vscode-pull-request-github"
     ]
 }
