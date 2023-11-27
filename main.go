@@ -5,19 +5,24 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"regexp"
+	"strings"
 )
 
 func main() {
 	// YouTube MusicのURL
-	youtubeMusicURL := "https://music.youtube.com/watch?v=EVBsypHzF3U&si=HuSCNAk7ZFbkOAB5"
+	youtubeMusicURL := "https://music.youtube.com/watch?v=SepkbjeTe7I&si=mG8D135LUv82zR7p"
 
-	// 正規表現でビデオIDを抽出
-	re := regexp.MustCompile(`(?<=watch\?v=)[a-zA-Z0-9]+(?=&|$)`)
-	videoID := re.FindString(youtubeMusicURL)
-	if videoID == "" {
-		fmt.Println("No video ID found in URL")
+	// "watch?v=" の後ろを取得
+	idStartIndex := strings.Index(youtubeMusicURL, "watch?v=") + len("watch?v=")
+	if idStartIndex == -1 {
+		fmt.Println("Invalid URL format")
 		return
+	}
+
+	// "&si=" がある場合、それ以降を削除
+	videoID := youtubeMusicURL[idStartIndex:]
+	if siIndex := strings.Index(videoID, "&si="); siIndex != -1 {
+		videoID = videoID[:siIndex]
 	}
 
 	// 環境変数からYouTube APIキーを取得
